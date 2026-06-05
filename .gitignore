@@ -18,4 +18,4 @@ trendyol-api-service
 Thumbs.db
 
 # Go
-vendor/
+# vendor/ is committed intentionally for offline Docker builds

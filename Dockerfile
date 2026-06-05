@@ -2,16 +2,12 @@ FROM golang:1.22-alpine AS builder
 
 WORKDIR /app
 
-# Proxy-based GOPROXY downloads zip archives over HTTPS — no git binary needed.
-# goproxy.io and goproxy.cn are reachable from restricted networks (Iran).
-ENV GOPROXY=https://goproxy.io,https://goproxy.cn
-ENV GONOSUMDB=*
-
 COPY go.mod go.sum ./
-RUN go mod download
-
+COPY vendor/ vendor/
 COPY . .
-RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o trendyol-api-service .
+
+# Build from vendored dependencies — no network access required.
+RUN CGO_ENABLED=0 GOOS=linux go build -mod=vendor -ldflags="-s -w" -o trendyol-api-service .
 
 # ─── Final image ──────────────────────────────────────────────────────────────
 FROM alpine:3.19

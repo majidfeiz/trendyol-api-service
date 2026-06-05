@@ -1,6 +1,9 @@
 services:
   trendyol-api:
-    build: .
+    build:
+      context: .
+      # host network lets the build stage use the host's DNS/proxy settings.
+      network: host
     container_name: trendyol-api-service
     restart: unless-stopped
     dns:

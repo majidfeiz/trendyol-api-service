@@ -2,6 +2,11 @@ FROM golang:1.22-alpine AS builder
 
 WORKDIR /app
 
+# Bypass proxy.golang.org (blocked on some servers); fetch directly from source repos.
+# GONOSUMDB skips checksum.sum.golang.org which may also be unreachable.
+ENV GOPROXY=direct
+ENV GONOSUMDB=*
+
 COPY go.mod go.sum ./
 RUN go mod download
 

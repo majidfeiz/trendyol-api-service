@@ -2,12 +2,14 @@ FROM golang:1.22-alpine AS builder
 
 WORKDIR /app
 
-# git is required by GOPROXY=direct to fetch modules from source repositories.
-RUN apk add --no-cache git
+# Switch Alpine repos to ArvanCloud mirror (accessible from Iran)
+RUN sed -i 's|https://dl-cdn.alpinelinux.org/alpine|https://mirror.arvancloud.ir/alpine|g' \
+        /etc/apk/repositories \
+    && apk add --no-cache git
 
-# Bypass proxy.golang.org (blocked on some servers); fetch directly from source repos.
-# GONOSUMDB skips checksum.sum.golang.org which may also be unreachable.
-ENV GOPROXY=direct
+# Use goproxy.io as Go module proxy (accessible from Iran).
+# Falls back through goproxy.cn then direct if needed.
+ENV GOPROXY=https://goproxy.io,https://goproxy.cn,direct
 ENV GONOSUMDB=*
 
 COPY go.mod go.sum ./
@@ -18,6 +20,10 @@ RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o trendyol-api-service .
 
 # ─── Final image ──────────────────────────────────────────────────────────────
 FROM alpine:3.19
+
+# Switch Alpine repos to ArvanCloud mirror (accessible from Iran)
+RUN sed -i 's|https://dl-cdn.alpinelinux.org/alpine|https://mirror.arvancloud.ir/alpine|g' \
+        /etc/apk/repositories
 
 # Chromium + dependencies for headless mode
 RUN apk --no-cache add \
@@ -31,7 +37,6 @@ RUN apk --no-cache add \
     font-noto
 
 ENV TZ=Europe/Istanbul
-# Path headless Chrome binary (used by chromedp when CHROME_PATH is set)
 ENV CHROME_PATH=/usr/bin/chromium-browser
 
 WORKDIR /app
